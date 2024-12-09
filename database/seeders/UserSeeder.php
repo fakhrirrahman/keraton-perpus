@@ -18,5 +18,11 @@ class UserSeeder extends Seeder
             'email' => 'echa@gmail.com',
             'password' => bcrypt('echa123'),
         ]);
+
+        User::factory()->create([
+            'name' => 'admin',
+            'email' => 'admin@admin.com',
+            'password' => bcrypt('password'),
+        ]);
     }
 }
