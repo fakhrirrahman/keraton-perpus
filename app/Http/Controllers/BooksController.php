@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Books;
+use Illuminate\Support\Facades\Auth;
 
 class BooksController extends Controller
 {
@@ -22,7 +23,7 @@ class BooksController extends Controller
      */
     public function create()
     {
-        
+        return view('books.create');
     }
 
     /**
@@ -30,7 +31,24 @@ class BooksController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'title' => 'required',
+            'image' => 'required | image',
+            'author' => 'required',
+            'published_at' => 'required',
+        ]);
+
+        $imagePath = $request->file('image')->store('books', 'public');
+
+        Books::create([
+            'title' => $request->title,
+            'image' => $imagePath,
+            'author' => $request->author,
+            'published_at' => $request->published_at,
+            'created_by' => Auth::id(),
+        ]);
+
+        return redirect()->route('books.index')->with('success', 'Book created successfully');
     }
 
     /**
@@ -38,7 +56,9 @@ class BooksController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $book = Books::with('creator', 'editor')->find($id);
+
+        return view('books.show', compact('book'));
     }
 
     /**
@@ -46,7 +66,9 @@ class BooksController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $book = Books::find($id);
+
+        return view('books.edit', compact('book'));
     }
 
     /**
@@ -54,7 +76,30 @@ class BooksController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'title' => 'required',
+            'image' => 'nullable|image',
+            'author' => 'required',
+            'published_at' => 'required',
+        ]);
+
+        $book = Books::find($id);
+
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('books', 'public');
+        } else {
+            $imagePath = $book->image;
+        }
+
+        $book->update([
+            'title' => $request->title,
+            'image' => $imagePath,
+            'author' => $request->author,
+            'published_at' => $request->published_at,
+            'updated_by' => Auth::id(),
+        ]);
+
+        return redirect()->route('books.index')->with('success', 'Book updated successfully');
     }
 
     /**
@@ -62,6 +107,9 @@ class BooksController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $book = Books::find($id);
+        $book->delete();
+
+        return redirect()->route('books.index')->with('success', 'Book deleted successfully');
     }
 }
